@@ -1,5 +1,6 @@
 package com.example.JWT.Service;
 
+import com.example.JWT.Dto.PasswordChangeRequest;
 import com.example.JWT.Dto.Product;
 import com.example.JWT.Entity.UserInfo;
 import com.example.JWT.Repository.UserInfoRepo;
@@ -9,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,6 +24,31 @@ public class ProductService {
     @Autowired
             private PasswordEncoder encoder;
      List<Product> productList = null;
+
+    public String changepassword(PasswordChangeRequest passwordChangeRequest) {
+
+        System.out.println(passwordChangeRequest.getEmail());
+        Optional<UserInfo> Optuser= userInfoRepo.findByEmail(passwordChangeRequest.getEmail());
+        UserInfo userInfo = Optuser.orElseThrow(() -> new NoSuchElementException("User not found"));
+
+//      System.out.println(userInfo.getPassword()+" == > "+encoder.encode(passwordChangeRequest.getOldpassword()));
+//      System.out.println("==>"+encoder.matches(passwordChangeRequest.getOldpassword(),userInfo.getPassword()));
+        if(encoder.matches(passwordChangeRequest.getOldpassword(),userInfo.getPassword()))
+        {
+          String encodednewpassword = encoder.encode(passwordChangeRequest.getNewpassword());
+            if(!encoder.matches(passwordChangeRequest.getOldpassword(),encodednewpassword)){
+                userInfo.setPassword(encodednewpassword);
+                userInfoRepo.save(userInfo);
+                return "Password Changed Successfully";
+            }
+
+            return "New password cannot be the same as the old password.";
+        }
+
+
+        return "OldPassword Doesn't Match";
+
+    }
 
     @PostConstruct
     public void loadProductsFromDB() {
