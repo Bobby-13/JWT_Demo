@@ -6,6 +6,8 @@ import com.example.JWT.Entity.UserInfo;
 import com.example.JWT.Repository.UserInfoRepo;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
+@EnableCaching
 public class ProductService {
 
     @Autowired
@@ -66,7 +69,9 @@ public class ProductService {
         return productList;
     }
 
+    @Cacheable(value = "products", key = "#id")
     public Product getProduct(int id) {
+        System.out.println("Fetching from DB");
         return productList.stream()
                 .filter(product -> product.getProductId() == id)
                 .findAny()
