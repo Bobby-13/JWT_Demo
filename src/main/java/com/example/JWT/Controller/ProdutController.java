@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin
 @RestController
@@ -57,14 +58,14 @@ public class ProdutController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public Product getProductById(@PathVariable int id) {
         return service.getProduct(id);
     }
 
    @PostMapping("/authenticate")
     public JwtResponse authenticationAndGetToken(@RequestBody AuthRequest authRequest){
-
+//         System.out.println(authRequest.getUsername());
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(),authRequest.getPassword()));
       if(authentication.isAuthenticated()){
           RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
@@ -102,4 +103,24 @@ public class ProdutController {
     }
 
 
+    @PostMapping("/forgot_password")
+    public String ForgotPassword(@RequestBody PasswordResetRequest passwordResetRequest){
+         System.out.println(passwordResetRequest.getEmail());
+        return service.forgotpassword(passwordResetRequest.getEmail());
+    }
+
+    @PostMapping("/reset_password")
+    public String ResetPassword(@RequestBody ResetPassword resetPassword){
+
+        if(!resetPassword.getConfirmpassword().equals(resetPassword.getPassword()))
+             return "Password Mismatch";
+
+      return service.resetPassword(resetPassword);
+    }
+
+    @GetMapping("/otp_verification")
+    public OTPVerification OtpVerfication(@RequestBody PasswordResetRequest passwordResetRequest)
+    {
+        return service.otpverification(passwordResetRequest.getEmail());
+    }
 }

@@ -24,11 +24,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@Order(2)
+//@Order(2) //
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     @Autowired
      private AuthFilter authFilter;
     @Bean
@@ -50,7 +49,9 @@ public class SecurityConfig {
    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
       return  http.csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/product/welcome","/product/new","/product/authenticate","/product/refreshToken","/actuator/serialized-data").permitAll()
+              //("/product/welcome","/product/new","/product/authenticate","/product/refreshToken",)
+                .requestMatchers("/product/welcome","/product/new","/product/authenticate","/product/refreshToken","/product/forgot_password","product/reset_password","product/otp_verification").permitAll()
+//              .requestMatchers("/product/all").hasRole("hasAuthority('ROLE_ADMIN')")
                 .and()
                 .authorizeHttpRequests().requestMatchers("/product/**").authenticated()
                 .and().sessionManagement()

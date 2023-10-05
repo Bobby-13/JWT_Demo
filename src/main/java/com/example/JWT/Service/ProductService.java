@@ -1,8 +1,12 @@
 package com.example.JWT.Service;
 
+import com.example.JWT.Dto.OTPVerification;
 import com.example.JWT.Dto.PasswordChangeRequest;
+import com.example.JWT.Dto.ResetPassword;
+import com.example.JWT.Entity.PasswordReset;
 import com.example.JWT.Dto.Product;
 import com.example.JWT.Entity.UserInfo;
+import com.example.JWT.Repository.PasswordResetRepo;
 import com.example.JWT.Repository.UserInfoRepo;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +15,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Random;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -22,6 +24,11 @@ import java.util.stream.IntStream;
 @EnableCaching
 public class ProductService {
 
+    @Autowired
+    private PasswordResetRepo passwordResetRepo;
+
+    @Autowired
+    private EmailService emailService;
     @Autowired
             private UserInfoRepo userInfoRepo;
     @Autowired
@@ -85,5 +92,63 @@ public class ProductService {
         userInfoRepo.save(userInfo);
 
         return "User Added Successfully";
+    }
+
+    public String forgotpassword(String email) {
+
+        Optional<UserInfo> optionalUserInfo = userInfoRepo.findByEmail(email);
+
+        if(!optionalUserInfo.isPresent())
+        {
+            return "No email found";
+        }
+       String vcode = generateOTP();
+
+      PasswordReset passwordReset = PasswordReset.builder()
+              .otp(vcode)
+              .expiryTime(Instant.now().plusMillis(600000))
+              .userInfo(optionalUserInfo.get())
+              .build();
+
+     emailService.EmailSender(email,"Password Reset OTP Verification",vcode);
+
+     passwordResetRepo.save(passwordReset);
+     return "OTP sent";
+
+    }
+
+    public static String generateOTP() {
+        UUID uuid = UUID.randomUUID();
+        long otpValue = Math.abs(uuid.getMostSignificantBits() % 1000000); // Extract 6 digits
+        return String.format("%06d", otpValue);
+    }
+
+    public String resetPassword(ResetPassword resetPassword) {
+        Optional<PasswordReset> passwordReset =  passwordResetRepo.findById(Integer.parseInt(resetPassword.getId()));
+
+        UserInfo user = passwordReset.get().getUserInfo();
+
+//        encoder.encode(resetPassword.getPassword());
+//        user.setPassword(resetPassword.getPassword());
+        user.setPassword(encoder.encode(resetPassword.getPassword()));
+        userInfoRepo.save(user);
+//     System.out.println(user.getEmail());
+     return "Password Updated Successfully";
+    }
+
+    public OTPVerification otpverification(String otp) {
+        Optional<PasswordReset> passwordReset =  passwordResetRepo.findByOtp(otp);
+
+        if(!passwordReset.isPresent()){
+            return OTPVerification.builder()
+                    .otp("Invalid OTP")
+                    .id(passwordReset.get().getId())
+                    .build();
+        }
+         OTPVerification otpVerification = OTPVerification.builder()
+                          .otp(passwordReset.get().getOtp())
+                          .id(passwordReset.get().getId())
+                          .build();
+        return otpVerification;
     }
 }

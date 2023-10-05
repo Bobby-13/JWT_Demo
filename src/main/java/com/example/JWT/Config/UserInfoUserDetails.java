@@ -9,9 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
 public class UserInfoUserDetails implements UserDetails {
-
     private String username;
     private String password;
     private List<GrantedAuthority> authorities;

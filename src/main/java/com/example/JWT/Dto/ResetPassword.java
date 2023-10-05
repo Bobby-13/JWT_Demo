@@ -1,12 +1,16 @@
 package com.example.JWT.Dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RefreshTokenRequest {
-    private String token;
+@Builder
+public class ResetPassword {
+    private String id;
+    private String password;
+    private String confirmpassword;
 }
